@@ -36,7 +36,7 @@ import {
 import { getDeviceModel } from "@ledgerhq/devices";
 import { Language } from "@ledgerhq/types-live";
 
-type State = {
+export type InstallLanguageState = {
   isLoading: boolean;
   requestQuitApp: boolean;
   unresponsive: boolean;
@@ -51,11 +51,12 @@ type State = {
 
 type InstallLanguageAction = Action<
   Language | undefined,
-  State,
+  InstallLanguageState,
   boolean | undefined
 >;
 
-const mapResult = ({ languageInstalled }: State) => languageInstalled;
+const mapResult = ({ languageInstalled }: InstallLanguageState) =>
+  languageInstalled;
 
 type Event =
   | InstallLanguageEvent
@@ -68,7 +69,9 @@ type Event =
       device: Device | null | undefined;
     };
 
-const getInitialState = (device?: Device | null | undefined): State => ({
+export const getInitialInstallLanguageState = (
+  device?: Device | null | undefined
+): InstallLanguageState => ({
   isLoading: !!device,
   requestQuitApp: false,
   unresponsive: false,
@@ -77,17 +80,20 @@ const getInitialState = (device?: Device | null | undefined): State => ({
   error: null,
 });
 
-const reducer = (state: State, e: Event): State => {
+export const installLanguageReducer = (
+  state: InstallLanguageState,
+  e: Event
+): InstallLanguageState => {
   switch (e.type) {
     case "unresponsiveDevice":
       return { ...state, unresponsive: true, isLoading: false };
 
     case "deviceChange":
-      return getInitialState(e.device);
+      return getInitialInstallLanguageState(e.device);
 
     case "error":
       return {
-        ...getInitialState(state.device),
+        ...getInitialInstallLanguageState(state.device),
         error: e.error,
         isLoading: false,
       };
@@ -300,8 +306,10 @@ export const createAction = (
   const useHook = (
     device: Device | null | undefined,
     language: Language | undefined
-  ): State => {
-    const [state, setState] = useState(() => getInitialState(device));
+  ): InstallLanguageState => {
+    const [state, setState] = useState(() =>
+      getInitialInstallLanguageState(device)
+    );
     const deviceSubject = useReplaySubject(device);
 
     useEffect(() => {
@@ -318,9 +326,9 @@ export const createAction = (
           // debounce a bit the connect/disconnect event that we don't need
           tap((e: Event) => log("actions-install-language-event", e.type, e)),
           // we gather all events with a reducer into the UI state
-          scan(reducer, getInitialState()),
+          scan(installLanguageReducer, getInitialInstallLanguageState()),
           // we debounce the UI state to not blink on the UI
-          debounce((s: State) => {
+          debounce((s: InstallLanguageState) => {
             if (s.installingLanguage || s.languageInstallationRequested) {
               return EMPTY;
             }
