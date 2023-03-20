@@ -4009,11 +4009,14 @@
   "FirmwareUpdate": {
     "title": "Update firmware",
     "updateDevice": "Update {{deviceName}}",
+    "updateDone": "All done! Your {{deviceName}} is up to date",
+    "updateDoneDescription": "New OS Version: {{firmwareVersion}}",
     "preparing": "Preparing the firmware update, please keep your device awake and connected. We will notify you of the progress",
     "confirmIdentifierText": "Verify that the identifier on your device is the same as the identifier below. Confirm and enter your PIN code if requested.",
     "pleaseReinstallApps": "Please reinstall the apps on your device.",
     "pleaseConfirmUpdate": "Confirm the update on your device",
     "pleaseConfirmUpdateOnYourDevice": "Confirm installation on {{deviceName}}",
+    "finishUpdateCTA": "Finish",
     "finishUpdate": "Finish the update on your {{deviceName}}",
     "identifierTitle": "Identifier:",
     "pleaseWaitDownload": "Please wait for the installer to be downloaded",
@@ -4065,7 +4068,8 @@
       },
       "restoreSettings":  {
         "titleInactive": "Restore apps and settings",
-        "description": "Your settings and blockchain apps will be restored."
+        "description": "Your settings and blockchain apps will be restored.",
+        "restoreLockScreenPicture": "Restoring lock screen picture"
       }
     },
     "newVersion": "Update {{version}} available for your {{deviceName}}",
