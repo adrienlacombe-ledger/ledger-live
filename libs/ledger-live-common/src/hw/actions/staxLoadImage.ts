@@ -32,7 +32,7 @@ import {
 } from "@ledgerhq/errors";
 import { getDeviceModel } from "@ledgerhq/devices";
 
-type State = {
+export type StaxLoadImageState = {
   isLoading: boolean;
   requestQuitApp: boolean;
   unresponsive: boolean;
@@ -50,11 +50,11 @@ type State = {
 
 type LoadImageAction = Action<
   string,
-  State,
+  StaxLoadImageState,
   { imageHash: string; imageSize: number }
 >;
 
-const mapResult = ({ imageHash, imageSize }: State) => ({
+const mapResult = ({ imageHash, imageSize }: StaxLoadImageState) => ({
   imageHash,
   imageSize,
 });
@@ -70,7 +70,9 @@ type Event =
       device: Device | null | undefined;
     };
 
-const getInitialState = (device?: Device | null | undefined): State => ({
+export const getInitialState = (
+  device?: Device | null | undefined
+): StaxLoadImageState => ({
   isLoading: !!device,
   requestQuitApp: false,
   unresponsive: false,
@@ -81,7 +83,10 @@ const getInitialState = (device?: Device | null | undefined): State => ({
   imageHash: "",
 });
 
-const reducer = (state: State, e: Event): State => {
+export const staxLoadImageReducer = (
+  state: StaxLoadImageState,
+  e: Event
+): StaxLoadImageState => {
   switch (e.type) {
     case "unresponsiveDevice":
       return { ...state, unresponsive: true, isLoading: false };
@@ -315,7 +320,7 @@ export const createAction = (
     device: Device | null | undefined,
     hexImage: string,
     padImage?: boolean
-  ): State => {
+  ): StaxLoadImageState => {
     const [state, setState] = useState(() => getInitialState(device));
     const deviceSubject = useReplaySubject(device);
 
@@ -334,9 +339,9 @@ export const createAction = (
           // debounce a bit the connect/disconnect event that we don't need
           tap((e: Event) => log("actions-load-stax-image-event", e.type, e)),
           // we gather all events with a reducer into the UI state
-          scan(reducer, getInitialState()),
+          scan(staxLoadImageReducer, getInitialState()),
           // we debounce the UI state to not blink on the UI
-          debounce((s: State) => {
+          debounce((s: StaxLoadImageState) => {
             if (
               s.loadingImage ||
               s.imageLoadRequested ||
