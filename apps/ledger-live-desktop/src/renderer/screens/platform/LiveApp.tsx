@@ -7,6 +7,7 @@ import { languageSelector } from "~/renderer/reducers/settings";
 import { useSelector } from "react-redux";
 import { useRemoteLiveAppManifest } from "@ledgerhq/live-common/platform/providers/RemoteLiveAppProvider/index";
 import { useLocalLiveAppManifest } from "@ledgerhq/live-common/platform/providers/LocalLiveAppProvider/index";
+
 type Props = {
   match: {
     params: {
@@ -27,10 +28,11 @@ type Props = {
     customDappUrl?: string;
   };
 };
-export default function PlatformApp({ match, appId: propsAppId, location }: Props) {
+
+export function LiveApp({ match, appId: propsAppId, location }: Props) {
   const history = useHistory();
   const { params: internalParams, search } = location;
-  const { state: urlParams, customDappUrl } = useLocation();
+  const { state: urlParams, customDappUrl } = useLocation<{ returnTo: string }>();
   const appId = propsAppId || match.params?.appId;
   const returnTo = useMemo(() => {
     const params = new URLSearchParams(search);
@@ -48,7 +50,7 @@ export default function PlatformApp({ match, appId: propsAppId, location }: Prop
   const localManifest = useLocalLiveAppManifest(appId);
   const remoteManifest = useRemoteLiveAppManifest(appId);
   let manifest = localManifest || remoteManifest;
-  if (customDappUrl) {
+  if (customDappUrl && manifest) {
     manifest = {
       ...manifest,
       params: {

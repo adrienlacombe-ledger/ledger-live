@@ -1,17 +1,20 @@
 import { LiveAppManifest } from "@ledgerhq/live-common/platform/types";
+import {
+  SearchBarValues,
+  TextInput,
+} from "@ledgerhq/live-common/wallet-api/react";
 import { Flex, SearchInput } from "@ledgerhq/native-ui";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { SearchBarValues } from "../types";
 
 export function SearchBar({
   input,
   inputRef,
   onChange,
   onFocus,
-}: Omit<
-  SearchBarValues<LiveAppManifest>,
-  "result" | "isSearching" | "isActive" | "onCancel"
+}: Pick<
+  SearchBarValues<LiveAppManifest, TextInput>,
+  "input" | "inputRef" | "onChange" | "onFocus"
 >) {
   const { t } = useTranslation();
 

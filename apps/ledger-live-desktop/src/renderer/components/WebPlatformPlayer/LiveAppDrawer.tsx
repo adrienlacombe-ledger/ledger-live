@@ -7,38 +7,41 @@ import CheckBox from "~/renderer/components/CheckBox";
 import Button from "~/renderer/components/Button";
 import { openURL } from "~/renderer/linking";
 import Box from "~/renderer/components/Box";
-import { dismissBanner } from "~/renderer/actions/settings";
 import { closePlatformAppDrawer } from "~/renderer/actions/UI";
 import {
   PlatformAppDrawers as AppDrawerPayload,
   platformAppDrawerStateSelector,
 } from "~/renderer/reducers/UI";
 import Text from "../Text";
-import AppDetails from "../Platform/AppDetails";
+import { AppDetails } from "../Platform/AppDetails";
 import ExternalLink from "../ExternalLink/index";
 import LiveAppDisclaimer from "./LiveAppDisclaimer";
+
 const Divider = styled(Box)`
   border: 1px solid ${p => p.theme.colors.palette.divider};
 `;
-export const LiveAppDrawer = () => {
-  const [dismissDisclaimerChecked, setDismissDisclaimerChecked] = useState<boolean>(false);
-  const {
-    isOpen,
-    payload,
-  }: {
+
+export function LiveAppDrawer() {
+  const [isChecked, setIsChecked] = useState(false);
+  // @ts-expect-error payload can be undefined during initialization
+  const { isOpen, payload: { manifest, type, title, next } = {} } = useSelector(
+    platformAppDrawerStateSelector,
+  ) as {
     isOpen: boolean;
-    payload: AppDrawerPayload;
-  } = useSelector(platformAppDrawerStateSelector);
-  const { manifest, type, title, disclaimerId, next } = payload ?? {};
+    payload?: AppDrawerPayload;
+  };
+
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  const onContinue = useCallback(() => {
-    if (dismissDisclaimerChecked && disclaimerId) {
-      dispatch(dismissBanner(disclaimerId));
-    }
-    dispatch(closePlatformAppDrawer());
-    next();
-  }, [dismissDisclaimerChecked, dispatch, disclaimerId, next]);
+
+  const onConfirm = useCallback(() => {
+    next(manifest, isChecked);
+  }, [manifest, next, isChecked]);
+
+  const toggleChecked = useCallback(() => {
+    setIsChecked(isChecked => !isChecked);
+  }, []);
+
   const drawerContent = () => {
     if (!manifest) {
       return null;
@@ -74,16 +77,13 @@ export const LiveAppDrawer = () => {
                 <Box
                   horizontal
                   alignItems="flex-start"
-                  onClick={() => setDismissDisclaimerChecked(!dismissDisclaimerChecked)}
+                  onClick={toggleChecked}
                   style={{
                     flex: 1,
                     cursor: "pointer",
                   }}
                 >
-                  <CheckBox
-                    isChecked={dismissDisclaimerChecked}
-                    data-test-id="dismiss-disclaimer"
-                  />
+                  <CheckBox isChecked={isChecked} data-test-id="dismiss-disclaimer" />
                   <Text
                     ff="Inter|SemiBold"
                     fontSize={4}
@@ -97,7 +97,7 @@ export const LiveAppDrawer = () => {
                   </Text>
                 </Box>
 
-                <Button primary onClick={onContinue} data-test-id="drawer-continue-button">
+                <Button primary onClick={onConfirm} data-test-id="drawer-continue-button">
                   {t("platform.disclaimer.CTA")}
                 </Button>
               </Box>
@@ -108,6 +108,7 @@ export const LiveAppDrawer = () => {
         return null;
     }
   };
+
   return (
     <SideDrawer
       title={t(title)}
@@ -122,4 +123,4 @@ export const LiveAppDrawer = () => {
       </Box>
     </SideDrawer>
   );
-};
+}

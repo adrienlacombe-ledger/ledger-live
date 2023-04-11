@@ -80,3 +80,7 @@ export type ConvertToLiveTransaction<
   T extends WalletAPITransaction,
   U extends Transaction
 > = (tx: T) => Partial<U>;
+
+export interface PlatformState {
+  recentlyUsed: string[];
+}

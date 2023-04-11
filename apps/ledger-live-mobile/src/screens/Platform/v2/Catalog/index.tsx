@@ -1,23 +1,21 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useEffect } from "react";
 import { TouchableOpacity } from "react-native";
 import { useTheme } from "styled-components/native";
 import * as Animatable from "react-native-animatable";
 import { Flex, Text } from "@ledgerhq/native-ui";
 import { useTranslation } from "react-i18next";
-import { LiveAppManifest } from "@ledgerhq/live-common/platform/types";
-import Fuse from "fuse.js";
+import {
+  useCategories,
+  useSearch,
+  useRecentlyUsed,
+} from "@ledgerhq/live-common/wallet-api/react";
+import { BROWSE_SEARCH_OPTIONS } from "@ledgerhq/live-common/wallet-api/constants";
 import ArrowLeft from "../../../../icons/ArrowLeft";
 import TabBarSafeAreaView, {
   TAB_BAR_SAFE_HEIGHT,
 } from "../../../../components/TabBar/TabBarSafeAreaView";
 import { Layout } from "./Layout";
-import {
-  useCategories,
-  useDeeplinkEffect,
-  useDisclaimer,
-  useSearch,
-  useRecentlyUsed,
-} from "./hooks";
+import { useDeeplinkEffect, useDisclaimer, usePlatformState } from "../hooks";
 import TrackScreen from "../../../../analytics/TrackScreen";
 import { Search, SearchBar } from "./Search";
 import { ManifestList } from "./ManifestList";
@@ -28,16 +26,12 @@ import { Props } from "../../Catalog";
 
 const AnimatedView = Animatable.View;
 
-const options: Fuse.IFuseOptions<LiveAppManifest> = {
-  keys: ["name"],
-  threshold: 0.1,
-};
-
 export function Catalog({ navigation }: Props) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const title = t("browseWeb3.catalog.title");
 
+  const state = usePlatformState();
   const {
     manifestsByCategories,
     manifests,
@@ -46,8 +40,7 @@ export function Catalog({ navigation }: Props) {
     setSelected,
     initialSelectedState,
   } = useCategories();
-
-  const recentlyUsed = useRecentlyUsed(manifests);
+  const { data, append, clear } = useRecentlyUsed(manifests, state);
 
   const {
     input,
@@ -60,7 +53,7 @@ export function Catalog({ navigation }: Props) {
     result,
   } = useSearch({
     list: manifests,
-    options,
+    options: BROWSE_SEARCH_OPTIONS,
   });
 
   // TODO: Move inside the custom hook
@@ -69,31 +62,18 @@ export function Catalog({ navigation }: Props) {
   }, [isActive, setSelected, initialSelectedState]);
 
   const {
-    isDismissed,
-    isReadOnly,
-    openApp,
-    prompt,
     name,
     icon,
     isOpened,
     onClose,
     isChecked,
     toggleCheck,
-    onContinue,
-  } = useDisclaimer(recentlyUsed.append);
+    onSelect,
+    openApp,
+    onConfirm,
+  } = useDisclaimer(append);
 
   useDeeplinkEffect(manifests, openApp);
-
-  const onSelect = useCallback(
-    (manifest: LiveAppManifest) => {
-      if (!isDismissed && !isReadOnly && manifest.author !== "ledger") {
-        prompt(manifest);
-      } else {
-        openApp(manifest);
-      }
-    },
-    [isDismissed, isReadOnly, openApp, prompt],
-  );
 
   return (
     <TabBarSafeAreaView edges={["bottom", "left", "right"]}>
@@ -106,15 +86,16 @@ export function Catalog({ navigation }: Props) {
         onClose={onClose}
         isChecked={isChecked}
         toggleCheck={toggleCheck}
-        onContinue={onContinue}
+        onConfirm={onConfirm}
       />
 
       {isActive ? (
         <Search
           manifests={manifests}
-          recentlyUsed={recentlyUsed.data}
+          recentlyUsed={data}
           title={title}
           input={input}
+          // TODO: type error (TextInput generics)
           inputRef={inputRef}
           backAction={onCancel}
           onChange={onChange}
@@ -162,9 +143,9 @@ export function Catalog({ navigation }: Props) {
             disableStyleBottomHeader
             bottomHeaderContent={
               <RecentlyUsed
-                recentlyUsed={recentlyUsed.data}
+                recentlyUsed={data}
                 onSelect={onSelect}
-                onClear={recentlyUsed.clear}
+                onClear={clear}
               />
             }
             disableStyleSubBottomHeader

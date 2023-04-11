@@ -18,7 +18,7 @@ interface Props {
   isOpened: boolean;
   isChecked: boolean;
   onClose: () => void;
-  onContinue: () => void;
+  onConfirm: () => void;
   toggleCheck: () => void;
 }
 
@@ -28,7 +28,7 @@ export function DAppDisclaimer({
   isOpened,
   isChecked,
   onClose,
-  onContinue,
+  onConfirm,
   toggleCheck,
 }: Props) {
   const { t } = useTranslation();
@@ -97,7 +97,7 @@ export function DAppDisclaimer({
       </Flex>
 
       <Flex mt={8}>
-        <Button type="main" onPress={onContinue}>
+        <Button type="main" onPress={onConfirm}>
           {t("platform.disclaimer.CTA")}
         </Button>
       </Flex>

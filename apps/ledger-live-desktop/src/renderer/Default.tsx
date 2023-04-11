@@ -18,8 +18,7 @@ import Swap2 from "~/renderer/screens/exchange/Swap2";
 import USBTroubleshooting from "~/renderer/screens/USBTroubleshooting";
 import Account from "~/renderer/screens/account";
 import Asset from "~/renderer/screens/asset";
-import PlatformCatalog from "~/renderer/screens/platform";
-import PlatformApp from "~/renderer/screens/platform/App";
+import { PlatformCatalog, LiveApp } from "~/renderer/screens/platform";
 import NFTGallery from "~/renderer/screens/nft/Gallery";
 import NFTCollection from "~/renderer/screens/nft/Gallery/Collection";
 import Box from "~/renderer/components/Box/Box";
@@ -214,7 +213,7 @@ export default function Default() {
                             <Redirect from="/manager/reload" to="/manager" />
                             <Route path="/manager" component={Manager} />
                             <Route path="/platform" component={PlatformCatalog} exact />
-                            <Route path="/platform/:appId?" component={PlatformApp} />
+                            <Route path="/platform/:appId?" component={LiveApp} />
                             <Route path="/earn" component={Earn} />
                             <Route path="/exchange" component={Exchange} />
                             <Route

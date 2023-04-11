@@ -1,60 +1,13 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { useManifests } from "@ledgerhq/live-common/platform/providers/RemoteLiveAppProvider/index";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { LiveAppManifest } from "@ledgerhq/live-common/platform/types";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useSelector } from "react-redux";
-import { TextInput } from "react-native";
-import Fuse from "fuse.js";
-import { useDebounce } from "@ledgerhq/live-common/hooks/useDebounce";
-import { AppManifest } from "@ledgerhq/live-common/wallet-api/types";
+
 import { ScreenName } from "../../../../const";
 import { useBanner } from "../../../../components/banners/hooks";
 import { readOnlyModeEnabledSelector } from "../../../../reducers/settings";
-import { NavigationProps, PlatformState, SearchBarValues } from "./types";
+import { NavigationProps, PlatformState } from "./types";
 import { getPlatform, savePlatform } from "../../../../db";
-
-export function useCategories() {
-  const manifests = useManifests();
-  const { categories, manifestsByCategories } = useCategoriesRaw(manifests);
-  const initialSelectedState = "all";
-  const [selected, setSelected] = useState(initialSelectedState);
-
-  return {
-    manifests,
-    categories,
-    manifestsByCategories,
-    initialSelectedState,
-    selected,
-    setSelected,
-  };
-}
-
-function useCategoriesRaw(manifests: AppManifest[]): {
-  categories: string[];
-  manifestsByCategories: Map<string, AppManifest[]>;
-} {
-  const manifestsByCategories = useMemo(() => {
-    const res = manifests.reduce((res, m) => {
-      m.categories.forEach(c => {
-        const list = res.has(c) ? [...res.get(c), m] : [m];
-        res.set(c, list);
-      });
-
-      return res;
-    }, new Map().set("all", manifests));
-
-    return res;
-  }, [manifests]);
-
-  const categories = useMemo(
-    () => [...manifestsByCategories.keys()],
-    [manifestsByCategories],
-  );
-
-  return {
-    categories,
-    manifestsByCategories,
-  };
-}
 
 export function useDeeplinkEffect(
   manifests: AppManifest[],
@@ -79,7 +32,7 @@ export function useDeeplinkEffect(
 const DAPP_DISCLAIMER_ID = "PlatformAppDisclaimer";
 
 export function useDisclaimer(
-  appendRecentlyUsed: (manifest: AppManifest) => void,
+  appendRecentlyUsed: (manifest: LiveAppManifest) => void,
 ) {
   const navigation = useNavigation<NavigationProps["navigation"]>();
   const route = useRoute<NavigationProps["route"]>();
@@ -135,75 +88,6 @@ export function useDisclaimer(
     close,
     toggleCheck,
     prompt: setManifest,
-  };
-}
-
-// TODO: Move somewhere more appropriate
-export function useSearch<Item>({
-  list,
-  defaultInput = "",
-  options,
-}: {
-  list: Item[];
-  defaultInput?: string;
-  options: Fuse.IFuseOptions<Item>;
-}): SearchBarValues<Item> {
-  const inputRef = useRef<TextInput>(null);
-  const [isActive, setIsActive] = useState(false);
-
-  const [input, setInput] = useState(defaultInput);
-  const debouncedInput = useDebounce(input, 500);
-
-  const [isSearching, setIsSearching] = useState(false);
-
-  const [result, setResult] = useState(list);
-  const fuse = useMemo(() => new Fuse(list, options), [list, options]);
-
-  const onChange = useCallback((value: string) => {
-    if (value.length !== 0) {
-      setIsSearching(true);
-    }
-
-    setInput(value);
-  }, []);
-
-  useEffect(() => {
-    if (debouncedInput) {
-      setIsSearching(true);
-      setResult(fuse.search(debouncedInput).map(res => res.item));
-    } else {
-      setResult([]);
-    }
-
-    setIsSearching(false);
-  }, [debouncedInput, fuse]);
-
-  const onFocus = useCallback(() => {
-    setIsActive(true);
-  }, []);
-
-  useEffect(() => {
-    if (isActive) {
-      inputRef.current?.focus();
-    }
-  }, [isActive]);
-
-  const onCancel = useCallback(() => {
-    setInput("");
-    setIsActive(false);
-
-    inputRef.current?.blur();
-  }, []);
-
-  return {
-    inputRef,
-    input,
-    result,
-    isActive,
-    isSearching,
-    onChange,
-    onFocus,
-    onCancel,
   };
 }
 

@@ -5,8 +5,11 @@ import {
   useRef,
   useCallback,
   RefObject,
+  Dispatch,
+  SetStateAction,
 } from "react";
 import semver from "semver";
+import Fuse from "fuse.js";
 import {
   Account,
   AccountLike,
@@ -25,6 +28,7 @@ import {
   Transport,
   Permission,
 } from "@ledgerhq/wallet-api-core";
+import { useDebounce } from "../hooks/useDebounce";
 import { Subject } from "rxjs";
 import { Observable, firstValueFrom } from "rxjs7";
 import { first } from "rxjs/operators";
@@ -63,6 +67,9 @@ import { UserRefusedOnDevice } from "@ledgerhq/errors";
 import { MessageData } from "../hw/signMessage/types";
 import { TypedMessageData } from "../families/ethereum/types";
 import { Transaction } from "../generated/types";
+import { useManifests } from "../platform/providers/RemoteLiveAppProvider";
+import { MAX_RECENTLY_USED_LENGTH } from "./constants";
+import { PlatformState } from "./types";
 
 export function safeGetRefValue<T>(ref: RefObject<T>): T {
   if (!ref.current) {
@@ -759,4 +766,331 @@ export enum ExchangeType {
   SWAP = 0x00,
   SELL = 0x01,
   FUND = 0x02,
+}
+
+export function useCategories(): {
+  manifests: AppManifest[];
+  categories: string[];
+  manifestsByCategories: Map<string, AppManifest[]>;
+  initialSelectedState: string;
+  selected: string;
+  setSelected: (val: string) => void;
+} {
+  const manifests = useManifests();
+  const { categories, manifestsByCategories } = useCategoriesRaw(manifests);
+  const initialSelectedState = "all";
+  const [selected, setSelected] = useState(initialSelectedState);
+
+  return {
+    manifests,
+    categories,
+    manifestsByCategories,
+    initialSelectedState,
+    selected,
+    setSelected,
+  };
+}
+
+function useCategoriesRaw(manifests: AppManifest[]): {
+  categories: string[];
+  manifestsByCategories: Map<string, AppManifest[]>;
+} {
+  const manifestsByCategories = useMemo(() => {
+    const res = manifests.reduce((res, m) => {
+      m.categories.forEach((c) => {
+        const list = res.has(c) ? [...res.get(c), m] : [m];
+        res.set(c, list);
+      });
+
+      return res;
+    }, new Map().set("all", manifests));
+
+    return res;
+  }, [manifests]);
+
+  const categories = useMemo(
+    () => [...manifestsByCategories.keys()],
+    [manifestsByCategories]
+  );
+
+  return {
+    categories,
+    manifestsByCategories,
+  };
+}
+
+// TODO: Move somewhere more appropriate (e.g. @ledgerhq/live-common/src/hooks)
+export function useSearch<Item, T extends TextInput | undefined = undefined>({
+  list,
+  options,
+  defaultInput = "",
+  filter,
+}: {
+  list: Item[];
+  defaultInput?: string;
+  options: Fuse.IFuseOptions<Item>;
+  filter?: (item: Item) => void;
+}): SearchBarValues<Item, T> {
+  const inputRef = useRef<T>(null);
+  const [isActive, setIsActive] = useState(false);
+
+  const [input, setInput] = useState(defaultInput);
+  const debouncedInput = useDebounce(input, 500);
+
+  const [isSearching, setIsSearching] = useState(false);
+
+  const [result, setResult] = useState(list);
+  const fuse = useMemo(() => new Fuse(list, options), [list, options]);
+
+  const onChange = useCallback((value: string) => {
+    if (value.length !== 0) {
+      setIsSearching(true);
+    }
+
+    setInput(value);
+  }, []);
+
+  useEffect(() => {
+    if (debouncedInput) {
+      setIsSearching(true);
+      setResult(fuse.search(debouncedInput).map((res) => res.item));
+    } else {
+      setResult([]);
+    }
+
+    setIsSearching(false);
+  }, [debouncedInput, fuse]);
+
+  const onFocus = useCallback(() => {
+    setIsActive(true);
+  }, []);
+
+  useEffect(() => {
+    if (isActive) {
+      inputRef.current?.focus();
+    }
+  }, [isActive]);
+
+  const onCancel = useCallback(() => {
+    setInput("");
+    setIsActive(false);
+
+    inputRef.current?.blur();
+  }, []);
+
+  const resultOut = useMemo(() => {
+    const res = input === "" ? list : result;
+
+    return filter ? res.filter(filter) : res;
+  }, [list, result, input, filter]);
+
+  return {
+    inputRef,
+    input,
+    result: resultOut,
+    isActive,
+    isSearching,
+    onChange,
+    onFocus,
+    onCancel,
+  };
+}
+
+export interface TextInput {
+  focus: () => void;
+  blur: () => void;
+}
+
+export interface SearchBarValues<
+  Item,
+  T extends TextInput | undefined = undefined
+> {
+  inputRef: React.RefObject<T>;
+  input: string;
+  result: Item[];
+  isActive: boolean;
+  isSearching: boolean;
+  onChange: (value: string) => void;
+  onFocus: () => void;
+  onCancel: () => void;
+}
+
+type StateStore<State, Selected> = [Selected, Dispatch<SetStateAction<State>>];
+
+// TODO: move somewhere generic
+export function useDBRaw<State, Selected>({
+  initialState,
+  getter,
+  setter: setterRaw,
+  selector,
+}: {
+  initialState: State;
+  getter: () => Promise<State | undefined>;
+  setter: (val: State) => Promise<void> | void;
+  selector: (state: State) => Selected;
+}): StateStore<State, Selected> {
+  const [state, setState] = useState<State>(initialState);
+
+  useEffect(() => {
+    getter().then((state) => {
+      if (!state) {
+        setterRaw(initialState);
+        return;
+      }
+
+      setState(state);
+    });
+  }, [initialState, getter, setterRaw]);
+
+  const setter = useCallback(
+    (newState) => {
+      const val = typeof newState === "function" ? newState(state) : newState;
+      const res = setterRaw(val);
+
+      if (res instanceof Promise) {
+        res.then(() => {
+          setState(val);
+        });
+      } else {
+        setState(val);
+      }
+    },
+    [state, setterRaw]
+  );
+
+  const result = useMemo(() => selector(state), [state, selector]);
+
+  return [result, setter];
+}
+
+export type RecentlyUsedStore = StateStore<
+  PlatformState,
+  PlatformState["recentlyUsed"]
+>;
+
+export function useRecentlyUsed(
+  manifests: AppManifest[],
+  [ids, setState]: RecentlyUsedStore
+): {
+  data: AppManifest[];
+  append: (manifest: AppManifest) => void;
+  clear: () => void;
+} {
+  const data = useMemo(
+    () =>
+      ids
+        .map((id) => manifests.find((m) => m.id === id))
+        .filter((m) => m !== undefined) as AppManifest[],
+    [ids, manifests]
+  );
+
+  const append = useCallback(
+    (manifest: AppManifest) => {
+      setState((state) => {
+        const index = state.recentlyUsed.findIndex((id) => id === manifest.id);
+
+        // Manifest already in first position
+        if (index === 0) {
+          return state;
+        }
+
+        // Manifest present we move it to the first position
+        // No need to check for MAX_LENGTH as we only move it
+        if (index !== -1) {
+          return {
+            ...state,
+            recentlyUsed: [
+              manifest.id,
+              ...state.recentlyUsed.slice(0, index),
+              ...state.recentlyUsed.slice(index + 1),
+            ],
+          };
+        }
+
+        // Manifest not preset we simply append and check for the length
+        return {
+          ...state,
+          recentlyUsed:
+            state.recentlyUsed.length >= MAX_RECENTLY_USED_LENGTH
+              ? [manifest.id, ...state.recentlyUsed.slice(0, -1)]
+              : [manifest.id, ...state.recentlyUsed],
+        };
+      });
+    },
+    [setState]
+  );
+
+  const clear = useCallback(() => {
+    setState((state) => ({ ...state, recentlyUsed: [] }));
+  }, [setState]);
+
+  return { data, append, clear };
+}
+
+export interface Disclaimer {
+  onConfirm: (manifest: AppManifest, isChecked: boolean) => void;
+  onSelect: (manifest: AppManifest) => void;
+}
+
+interface DisclaimerUiHook {
+  prompt: (
+    manifest: AppManifest,
+    onContinue: (manifest: AppManifest, isChecked: boolean) => void
+  ) => void;
+  dismiss: () => void;
+  openApp: (manifest: AppManifest) => void;
+  close: () => void;
+}
+
+export function useDisclaimerRaw({
+  isReadOnly = false,
+  isDismissed,
+  uiHook,
+  appendRecentlyUsed,
+}: {
+  // used only on mobile for now
+  isReadOnly?: boolean;
+  isDismissed: boolean;
+  appendRecentlyUsed: (manifest: AppManifest) => void;
+  uiHook: DisclaimerUiHook;
+}): Disclaimer {
+  const onConfirm = useCallback(
+    (manifest: AppManifest, isChecked: boolean) => {
+      if (!manifest) return;
+
+      if (isChecked) {
+        uiHook.dismiss();
+      }
+
+      uiHook.close();
+      uiHook.openApp(manifest);
+    },
+    [uiHook]
+  );
+
+  const onSelect = useCallback(
+    (manifest: AppManifest) => {
+      if (manifest.branch === "soon") {
+        return;
+      }
+
+      if (
+        !isDismissed &&
+        !isReadOnly &&
+        // @ts-expect-error Author property only exists in v1 (LiveAppManifest) but not in v2
+        manifest.author !== "ledger"
+      ) {
+        uiHook.prompt(manifest, onConfirm);
+      } else {
+        uiHook.openApp(manifest);
+        appendRecentlyUsed(manifest);
+      }
+    },
+    [isReadOnly, isDismissed, uiHook, appendRecentlyUsed, onConfirm]
+  );
+
+  return {
+    onSelect,
+    onConfirm,
+  };
 }

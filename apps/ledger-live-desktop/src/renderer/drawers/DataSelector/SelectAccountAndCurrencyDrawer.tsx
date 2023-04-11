@@ -19,11 +19,13 @@ const options = {
   keys: ["name", "ticker"],
   shouldSort: false,
 };
+
 function fuzzySearch(currencies: Currency[], searchValue: string): Currency[] {
   const fuse = new Fuse(currencies, options);
-  const result = fuse.search(searchValue);
-  return result as Currency[];
+  // TODO: is it true?
+  return fuse.search(searchValue) as Currency[];
 }
+
 const SelectAccountAndCurrencyDrawerContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -34,11 +36,13 @@ const SelectAccountAndCurrencyDrawerContainer = styled.div`
   right: 0;
   bottom: 0;
 `;
+
 const SelectorContent = styled.div`
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
 `;
+
 const HeaderContainer = styled.div`
   padding: 40px 0px 32px 0px;
   flex: 0 1 auto;
@@ -47,83 +51,91 @@ const HeaderContainer = styled.div`
   align-items: center;
   justify-content: center;
 `;
-export type SelectAccountAndCurrencyDrawerProps = {
-  onClose?: () => void;
+
+type SelectAccountAndCurrencyDrawerProps = {
+  onClose: () => void;
   currencies: CryptoOrTokenCurrency[];
   onAccountSelected: (account: AccountLike, parentAccount?: Account) => void;
   accounts$?: Observable<WalletAPIAccount[]>;
 };
+
 const SearchInputContainer = styled.div`
   padding: 0px 40px 16px 40px;
   flex: 0 1 auto;
 `;
+
+const MemoizedSelectAccountAndCurrencyDrawer = memo<SelectAccountAndCurrencyDrawerProps>(
+  function SelectAccountAndCurrencyDrawer(props: SelectAccountAndCurrencyDrawerProps) {
+    const { currencies, onAccountSelected, onClose, accounts$ } = props;
+    const { t } = useTranslation();
+    const [searchValue, setSearchValue] = useState<string>("");
 
 function SelectAccountAndCurrencyDrawer(props: SelectAccountAndCurrencyDrawerProps) {
   const { currencies, onAccountSelected, onClose, accounts$ } = props;
   const { t } = useTranslation();
   const [searchValue, setSearchValue] = useState<string>("");
 
-  // sorting them by marketcap
-  const sortedCurrencies = useCurrenciesByMarketcap(currencies);
+    // performing fuzzy search if there is a valid searchValue
+    const filteredCurrencies = useMemo(() => {
+      if (searchValue.length < 2) {
+        return sortedCurrencies;
+      }
+      return fuzzySearch(sortedCurrencies, searchValue);
+    }, [searchValue, sortedCurrencies]);
 
-  // performing fuzzy search if there is a valid searchValue
-  const filteredCurrencies = useMemo(() => {
-    if (searchValue.length < 2) {
-      return sortedCurrencies;
+    const handleCurrencySelected = useCallback(
+      currency => {
+        setDrawer(
+          SelectAccountDrawer,
+          {
+            accounts$,
+            currency,
+            onAccountSelected,
+            onRequestBack: () =>
+              setDrawer(MemoizedSelectAccountAndCurrencyDrawer, props, {
+                onRequestClose: onClose,
+              }),
+          },
+          {
+            onRequestClose: onClose,
+          },
+        );
+      },
+      [onAccountSelected, props, onClose, accounts$],
+    );
+
+    if (currencies.length === 1) {
+      return <SelectAccountDrawer currency={currencies[0]} onAccountSelected={onAccountSelected} />;
     }
-    return fuzzySearch(sortedCurrencies, searchValue);
-  }, [searchValue, sortedCurrencies]);
-  const handleCurrencySelected = useCallback(
-    currency => {
-      setDrawer(
-        SelectAccountDrawer,
-        {
-          accounts$,
-          currency,
-          onAccountSelected,
-          onRequestBack: () =>
-            setDrawer(MemoizedSelectAccountAndCurrencyDrawer, props, {
-              onRequestClose: onClose,
-            }),
-        },
-        {
-          onRequestClose: onClose,
-        },
-      );
-    },
-    [onAccountSelected, props, onClose, accounts$],
-  );
-  if (currencies.length === 1) {
-    return <SelectAccountDrawer currency={currencies[0]} onAccountSelected={onAccountSelected} />;
-  }
-  return (
-    <SelectAccountAndCurrencyDrawerContainer>
-      <HeaderContainer>
-        <Text
-          ff="Inter|Medium"
-          color="palette.text.shade100"
-          fontSize="24px"
-          style={{
-            textTransform: "uppercase",
-          }}
-          data-test-id="select-asset-drawer-title"
-        >
-          {t("drawers.selectCurrency.title")}
-        </Text>
-      </HeaderContainer>
-      <SelectorContent>
-        <SearchInputContainer>
-          <SearchInput
-            data-test-id="select-asset-drawer-search-input"
-            value={searchValue}
-            onChange={setSearchValue}
-          />
-        </SearchInputContainer>
-        <CurrencyList currencies={filteredCurrencies} onCurrencySelect={handleCurrencySelected} />
-      </SelectorContent>
-    </SelectAccountAndCurrencyDrawerContainer>
-  );
-}
-const MemoizedSelectAccountAndCurrencyDrawer = memo(SelectAccountAndCurrencyDrawer);
+
+    return (
+      <SelectAccountAndCurrencyDrawerContainer>
+        <HeaderContainer>
+          <Text
+            ff="Inter|Medium"
+            color="palette.text.shade100"
+            fontSize="24px"
+            style={{
+              textTransform: "uppercase",
+            }}
+            data-test-id="select-asset-drawer-title"
+          >
+            {t("drawers.selectCurrency.title")}
+          </Text>
+        </HeaderContainer>
+        <SelectorContent>
+          <SearchInputContainer>
+            <SearchInput
+              data-test-id="select-asset-drawer-search-input"
+              value={searchValue}
+              onChange={setSearchValue}
+            />
+          </SearchInputContainer>
+          <CurrencyList currencies={filteredCurrencies} onCurrencySelect={handleCurrencySelected} />
+        </SelectorContent>
+      </SelectAccountAndCurrencyDrawerContainer>
+    );
+  },
+);
 
 export default MemoizedSelectAccountAndCurrencyDrawer;

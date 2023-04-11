@@ -18,6 +18,7 @@ export function Catalog(props: CatalogProps) {
 export function LiveApp(props: LiveAppProps) {
   const config = useFeature("discover");
 
+  // TODO: both version looks the same now
   return config?.enabled && config?.params.version === "2" ? (
     <LiveApp2 {...props} />
   ) : (

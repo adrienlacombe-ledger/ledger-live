@@ -6,7 +6,7 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useState } from "re
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { UserRefusedOnDevice } from "@ledgerhq/errors";
-import { Account, Operation, SignedOperation } from "@ledgerhq/types-live";
+import { Operation, SignedOperation } from "@ledgerhq/types-live";
 import { useToasts } from "@ledgerhq/live-common/notifications/ToastProvider/index";
 import {
   receiveOnAccountLogic,
@@ -80,7 +80,7 @@ export const PlatformAPIWebview = forwardRef<WebviewAPI, WebviewProps>(
                 openModal("MODAL_EXCHANGE_CRYPTO_DEVICE", {
                   account,
                   parentAccount,
-                  onResult: (_account: Account, _parentAccount: Account) => {
+                  onResult: () => {
                     tracking.platformReceiveSuccess(manifest);
                     resolve(accountAddress);
                   },
@@ -376,7 +376,7 @@ export const PlatformAPIWebview = forwardRef<WebviewAPI, WebviewProps>(
            * seem to be set
            */
           style={webviewStyle}
-          preload={`file://${remote.app.dirname}/webviewPreloader.bundle.js`}
+          preload={`file://${remote.app.getAppPath()}/webviewPreloader.bundle.js`}
           /**
            * There seems to be an issue between Electron webview and react
            * Hence, the normal `allowpopups` prop does not work and we need to
