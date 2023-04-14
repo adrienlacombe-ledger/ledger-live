@@ -1,7 +1,9 @@
 import { Device, DeviceModelId } from "@ledgerhq/types-devices";
 import React, { useCallback } from "react";
 import { has as hasFromPath, set as setFromPath } from "lodash";
+import { Linking } from "react-native";
 import { Flex } from "@ledgerhq/native-ui";
+import { useFeature } from "@ledgerhq/live-common/featureFlags/index";
 import { NavigatorName, ScreenName } from "../../const";
 import { useIncrementOnNavigationFocusState } from "../../helpers/useIncrementOnNavigationFocusState";
 import BleDevicePairingFlowComponent from "../../components/BleDevicePairingFlow/index";
@@ -11,6 +13,8 @@ import {
 } from "../../components/RootNavigator/types/helpers";
 import { BaseNavigatorStackParamList } from "../../components/RootNavigator/types/BaseNavigator";
 import DeviceSetupView from "../../components/DeviceSetupView";
+import { ServicesConfig } from "../../components/ServicesWidget/types";
+import { usePostOnboardingURI } from "../../hooks/recoverFeatureFlag";
 
 export type Props = RootComposite<
   StackNavigatorProps<
@@ -25,6 +29,7 @@ const defaultNavigationParams = {
   filterByDeviceModelId: DeviceModelId.stax, // This needs to be removed when nanos are supported
   areKnownDevicesDisplayed: true,
   onSuccessAddToKnownDevices: false,
+  isRecoverFlow: false,
   successNavigateToConfig: {
     navigationType: "navigate",
     pathToDeviceParam: "params.params.params.device",
@@ -86,6 +91,7 @@ export const BleDevicePairingFlow = ({ navigation, route }: Props) => {
     areKnownDevicesDisplayed = true,
     areKnownDevicesPairable = false,
     onSuccessAddToKnownDevices = false,
+    isRecoverFlow = false,
     onSuccessNavigateToConfig = defaultNavigationParams.successNavigateToConfig,
   } = params;
 
@@ -95,12 +101,25 @@ export const BleDevicePairingFlow = ({ navigation, route }: Props) => {
     navigationType = "navigate",
   } = onSuccessNavigateToConfig;
 
+  const recoverConfig: ServicesConfig | null = useFeature(
+    "protectServicesMobile",
+  );
+
   // Makes sure the pairing components are reset when navigating back to this screen
   const keyToReset =
     useIncrementOnNavigationFocusState<Props["navigation"]>(navigation);
 
+  const recoverRestoreFlowURI = usePostOnboardingURI();
+
   const onPairingSuccess = useCallback(
     (device: Device) => {
+      if (recoverConfig?.enabled && recoverRestoreFlowURI && isRecoverFlow) {
+        Linking.canOpenURL(recoverRestoreFlowURI).then(() =>
+          Linking.openURL(recoverRestoreFlowURI),
+        );
+        return;
+      }
+
       const hasDeviceParam = hasFromPath(navigateInput, pathToDeviceParam);
       if (hasDeviceParam) {
         setFromPath(navigateInput, pathToDeviceParam, device);
@@ -131,7 +150,15 @@ export const BleDevicePairingFlow = ({ navigation, route }: Props) => {
         navigation.navigate(navigateInput.name, params);
       }
     },
-    [navigateInput, navigation, navigationType, pathToDeviceParam],
+    [
+      isRecoverFlow,
+      navigateInput,
+      navigation,
+      navigationType,
+      pathToDeviceParam,
+      recoverConfig?.enabled,
+      recoverRestoreFlowURI,
+    ],
   );
 
   return (
