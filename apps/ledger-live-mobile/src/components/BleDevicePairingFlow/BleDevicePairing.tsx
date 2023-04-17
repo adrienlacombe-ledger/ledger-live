@@ -1,11 +1,11 @@
 import React, { ReactNode, useCallback, useEffect } from "react";
-import { TouchableOpacity } from "react-native";
+import { Linking, TouchableOpacity } from "react-native";
 import { useTheme } from "styled-components/native";
 import { useBleDevicePairing } from "@ledgerhq/live-common/ble/hooks/useBleDevicePairing";
 import { Device } from "@ledgerhq/live-common/hw/actions/types";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { getDeviceModel } from "@ledgerhq/devices";
-import { Flex, InfiniteLoader, Text, Button } from "@ledgerhq/native-ui";
+import { Flex, InfiniteLoader, Text, Button, Icons } from "@ledgerhq/native-ui";
 import {
   CircledCheckSolidMedium,
   CircledCrossSolidMedium,
@@ -17,6 +17,7 @@ import Animation from "../Animation";
 import { TrackScreen } from "../../analytics";
 import GenericErrorView from "../GenericErrorView";
 import { Wrapper } from "../DeviceAction/rendering";
+import { urls } from "../../config/urls";
 
 const TIMEOUT_AFTER_PAIRED_MS = 2000;
 
@@ -52,6 +53,10 @@ const BleDevicePairing = ({
   const { isPaired, pairingError } = useBleDevicePairing({
     deviceId: deviceToPair.deviceId,
   });
+
+  const onOpenHelp = useCallback(() => {
+    Linking.openURL(urls.errors.PairingFailed);
+  }, []);
 
   useEffect(() => {
     if (isPaired) {
@@ -107,8 +112,28 @@ const BleDevicePairing = ({
     );
   } else if (pairingError instanceof PeerRemovedPairing) {
     content = (
-      <Wrapper>
-        <GenericErrorView error={pairingError} withDescription withIcon />
+      <Wrapper style={{ width: "100%" }}>
+        <GenericErrorView
+          error={pairingError}
+          withDescription
+          hasExportLogButton={false}
+          withIcon
+          withHelp={false}
+        />
+        <Flex mt={30} flexDirection="column" style={{ width: "100%" }}>
+          <Button
+            type="main"
+            iconPosition="right"
+            Icon={Icons.ExternalLinkMedium}
+            onPress={onOpenHelp}
+            mb={0}
+          >
+            <Trans i18nKey="help.helpCenter.desc" />
+          </Button>
+          <Button onPress={onRetry} mt={6}>
+            <Trans i18nKey="common.retry" />
+          </Button>
+        </Flex>
       </Wrapper>
     );
   } else if (pairingError) {
