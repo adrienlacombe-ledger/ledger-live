@@ -43,6 +43,7 @@ import type { ClaimRewardsNavigatorParamList } from "./ClaimRewardsNavigator";
 import type { UnfreezeNavigatorParamList } from "./UnfreezeNavigator";
 import type { FreezeNavigatorParamList } from "./FreezeNavigator";
 import type { BuyDeviceNavigatorParamList } from "./BuyDeviceNavigator";
+import type { MainNavigatorParamList } from "./MainNavigator";
 import type { WalletConnectNavigatorParamList } from "./WalletConnectNavigator";
 import type { WalletConnectLiveAppNavigatorParamList } from "./WalletConnectLiveAppNavigator";
 import type { PostOnboardingNavigatorParamList } from "./PostOnboardingNavigator";
@@ -94,7 +95,11 @@ export type PathToDeviceParam = PropertyPath;
 export type NavigationType = "navigate" | "replace" | "push";
 
 export type BaseNavigatorStackParamList = {
-  [NavigatorName.Main]: undefined;
+  [NavigatorName.Main]:
+    | (NavigatorScreenParams<MainNavigatorParamList> & {
+        hideTabNavigation?: boolean;
+      })
+    | undefined;
   [NavigatorName.BuyDevice]:
     | NavigatorScreenParams<BuyDeviceNavigatorParamList>
     | undefined;

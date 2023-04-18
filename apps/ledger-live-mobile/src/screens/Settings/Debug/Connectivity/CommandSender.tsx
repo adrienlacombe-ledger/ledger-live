@@ -19,7 +19,9 @@ import NavigationScrollView from "../../../../components/NavigationScrollView";
 import LText from "../../../../components/LText";
 import QueuedDrawer from "../../../../components/QueuedDrawer";
 
-const commandsById: { [key: string]: (transport: Transport) => unknown } = {
+const commandsById: {
+  [key: string]: (transport: Transport, ...args: any[]) => unknown;
+} = {
   getDeviceInfo,
   quitApp,
   getAppAndVersion,
