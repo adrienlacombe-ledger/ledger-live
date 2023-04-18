@@ -215,8 +215,7 @@ export const urls = {
     nanoX:
       "https://support.ledger.com/hc/en-us/articles/360014980580-Ledger-Nano-X-firmware-release-notes?docs=true",
     stax: "https://support.ledger.com/hc/en-us/articles/9950654827293?docs=true",
-    blue:
-      "https://support.ledger.com/hc/en-us/articles/360014980580-Ledger-Nano-X-firmware-release-notes?docs=true",
+    blue: "https://support.ledger.com/hc/en-us/articles/360014980580-Ledger-Nano-X-firmware-release-notes?docs=true",
   },
   lnxFirmwareUpdate:
     "https://support.ledger.com/hc/en-us/articles/9305992683165?docs=true",

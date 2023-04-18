@@ -131,7 +131,7 @@ const FirmwareUpdateBanner = () => {
 
   const onOpenReleaseNotes = useCallback(() => {
     if (lastConnectedDevice) {
-      Linking.openURL(urls.fwUpdateReleaseNotes[lastConnectedDevice?.modelId])
+      Linking.openURL(urls.fwUpdateReleaseNotes[lastConnectedDevice?.modelId]);
     }
   }, []);
 
