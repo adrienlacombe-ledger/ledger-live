@@ -186,7 +186,7 @@ const FirmwareUpdateBanner = () => {
     <Flex>
       <Flex backgroundColor="neutral.c100" borderRadius={8} px={5} py={6}>
         <Flex flexDirection="row" alignItems="center" mb={5}>
-          <Icons.CloudDownloadRegular color="neutral.c00" size={32} />
+          <Icons.CloudDownloadMedium color="neutral.c00" size={32} />
           <Text
             ml={5}
             flexShrink={1}
