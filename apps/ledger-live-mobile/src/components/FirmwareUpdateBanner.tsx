@@ -183,7 +183,7 @@ const FirmwareUpdateBanner = () => {
     : "";
 
   return showBanner && hasCompletedOnboarding && hasConnectedDevice ? (
-    <Flex>
+    <>
       <Flex backgroundColor="neutral.c100" borderRadius={8} px={5} py={6}>
         <Flex flexDirection="row" alignItems="center" mb={5}>
           <Icons.CloudDownloadMedium color="neutral.c00" size={32} />
@@ -201,7 +201,7 @@ const FirmwareUpdateBanner = () => {
           </Text>
         </Flex>
         <InvertTheme>
-          <Flex flexDirection="row" flex={1}>
+          <Flex flexDirection="row">
             <Button
               flex={1}
               outline
@@ -274,7 +274,7 @@ const FirmwareUpdateBanner = () => {
           </Button>
         </Flex>
       </QueuedDrawer>
-    </Flex>
+    </>
   ) : null;
 };
 
