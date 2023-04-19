@@ -32,7 +32,11 @@ import QueuedDrawer from "./QueuedDrawer";
 import InvertTheme from "./theme/InvertTheme";
 import { urls } from "../config/urls";
 
-const FirmwareUpdateBanner = () => {
+type FirmwareUpdateBannerProps = {
+  onBackFromUpdate?: () => void;
+}
+
+const FirmwareUpdateBanner = ({ onBackFromUpdate }: FirmwareUpdateBannerProps) => {
   const lastSeenDevice: DeviceModelInfo | null | undefined = useSelector(
     lastSeenDeviceSelector,
   );
@@ -97,6 +101,7 @@ const FirmwareUpdateBanner = () => {
           device: lastConnectedDevice,
           deviceInfo: lastSeenDevice?.deviceInfo,
           firmwareUpdateContext: latestFirmware,
+          onBackFromUpdate,
         },
       });
       return;

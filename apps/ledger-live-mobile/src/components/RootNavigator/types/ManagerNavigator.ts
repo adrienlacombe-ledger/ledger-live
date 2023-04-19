@@ -29,5 +29,6 @@ export type ManagerNavigatorStackParamList = {
     deviceInfo?: DeviceInfo | null;
     firmwareUpdateContext?: FirmwareUpdateContext | null;
     device?: Device | null;
+    onBackFromUpdate?: () => void;
   };
 };

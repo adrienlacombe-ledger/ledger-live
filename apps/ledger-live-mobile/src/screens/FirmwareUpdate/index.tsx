@@ -46,6 +46,7 @@ type FirmwareUpdateParams = {
   device: Device;
   deviceInfo: DeviceInfo;
   firmwareUpdateContext: FirmwareUpdateContext;
+  onBackFromUpdate?: () => void;
   updateFirmwareAction?: (
     args: updateFirmwareActionArgs,
   ) => Observable<UpdateFirmwareActionState>;
@@ -120,6 +121,7 @@ export const FirmwareUpdate = ({
   device,
   deviceInfo,
   firmwareUpdateContext,
+  onBackFromUpdate,
   updateFirmwareAction,
 }: FirmwareUpdateParams) => {
   const { triggerUpdate, updateState } = useUpdateFirmware({
@@ -133,6 +135,7 @@ export const FirmwareUpdate = ({
   const dispatch = useDispatch();
 
   const quitUpdate = useCallback(() => {
+    if(onBackFromUpdate) onBackFromUpdate();
     navigation.goBack();
   }, [navigation]);
 
@@ -437,6 +440,7 @@ const FirmwareUpdateScreen = () => {
         deviceInfo={params.deviceInfo}
         device={params.device}
         firmwareUpdateContext={params.firmwareUpdateContext}
+        onBackFromUpdate={params.onBackFromUpdate}
       />
     </Flex>
   );
