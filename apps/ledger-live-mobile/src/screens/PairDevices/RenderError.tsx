@@ -47,7 +47,9 @@ function RenderError({ error, status, onBypassGenuine, onRetry }: Props) {
 
   const url = isBrokenPairing
     ? urls.errors.PeerRemovedPairing
-    : (isPairingStatus && urls.errors.PairingFailed) || undefined;
+    : isPairingStatus
+    ? urls.errors.PairingFailed
+    : undefined;
 
   const onOpenHelp = useCallback(() => {
     if (!url) return;
