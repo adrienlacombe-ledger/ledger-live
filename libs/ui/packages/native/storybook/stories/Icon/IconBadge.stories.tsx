@@ -17,11 +17,11 @@ export const IconBadgeStory: ComponentStory<typeof IconBadge> = () => {
     <Flex flexDirection="column" alignItems="center">
       <IconBadge Icon={Icons.HandshakeMedium} iconColor="success.c100" iconSize={24} />
       <Box height={20} />
-      <IconBadge Icon={Icons.BatteryHalfRegular} iconColor="primary.c100" iconSize={24} />
+      <IconBadge Icon={Icons.BatteryHalfMedium} iconColor="primary.c100" iconSize={24} />
       <Box height={20} />
-      <IconBadge Icon={Icons.WarningRegular} iconColor="warning.c100" iconSize={24} />
+      <IconBadge Icon={Icons.WarningMedium} iconColor="warning.c100" iconSize={24} />
       <Box height={20} />
-      <IconBadge Icon={Icons.CloseRegular} iconColor="error.c100" iconSize={24} />
+      <IconBadge Icon={Icons.CloseMedium} iconColor="error.c100" iconSize={24} />
       <Box height={20} />
     </Flex>
   );
