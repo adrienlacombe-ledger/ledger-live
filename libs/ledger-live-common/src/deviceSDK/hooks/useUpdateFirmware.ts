@@ -41,7 +41,7 @@ export const useUpdateFirmware = ({
           // we need to buffer them according to the throttle time and always return the latest event from the buffer
           bufferTime(STATE_UPDATE_THROTTLE),
           map((events) => events[events.length - 1]),
-          filter((e) => e !== undefined),
+          filter((e) => e !== undefined)
         )
         .subscribe({
           next: (state) => setUpdateState(state),
