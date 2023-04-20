@@ -34,9 +34,11 @@ import { urls } from "../config/urls";
 
 type FirmwareUpdateBannerProps = {
   onBackFromUpdate?: () => void;
-}
+};
 
-const FirmwareUpdateBanner = ({ onBackFromUpdate }: FirmwareUpdateBannerProps) => {
+const FirmwareUpdateBanner = ({
+  onBackFromUpdate,
+}: FirmwareUpdateBannerProps) => {
   const lastSeenDevice: DeviceModelInfo | null | undefined = useSelector(
     lastSeenDeviceSelector,
   );
