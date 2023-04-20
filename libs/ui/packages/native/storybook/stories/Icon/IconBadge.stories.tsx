@@ -9,7 +9,6 @@ import IconBadge from "../../../src/components/Icon/IconBadge";
 export default {
   title: "Icon/IconBadge",
   component: IconBadge,
-
 };
 
 export const IconBadgeStory: ComponentStory<typeof IconBadge> = () => {
