@@ -367,8 +367,6 @@ export const FirmwareUpdate = ({
     updateActionState.step,
   ]);
 
-  console.log({ step: updateActionState.step });
-
   const deviceInteractionDisplay = useMemo(() => {
     const error = updateActionState.error ?? staxLoadImageState.error;
     if (error) {
