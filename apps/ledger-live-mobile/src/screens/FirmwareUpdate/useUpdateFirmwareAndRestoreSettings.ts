@@ -51,6 +51,7 @@ export const useUpdateFirmwareAndRestoreSettings = ({
       ? device
       : null,
     staxFetchImageState.hexImage ?? "",
+    false
   );
 
   useEffect(() => {
