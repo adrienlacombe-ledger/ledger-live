@@ -2,9 +2,13 @@ import { log } from "@ledgerhq/logs";
 import staxLoadImage from "@ledgerhq/live-common/hw/staxLoadImage";
 import staxFetchImage from "@ledgerhq/live-common/hw/staxFetchImage";
 import installLanguage from "@ledgerhq/live-common/hw/installLanguage";
+import connectApp from "@ledgerhq/live-common/hw/connectApp";
+import connectManager from "@ledgerhq/live-common/hw/connectManager";
 import { createAction as createStaxLoadImageAction } from "@ledgerhq/live-common/hw/actions/staxLoadImage";
 import { createAction as createStaxFetchImageAction } from "@ledgerhq/live-common/hw/actions/staxFetchImage";
 import { createAction as createInstallLanguageAction } from "@ledgerhq/live-common/hw/actions/installLanguage";
+import { createAction as createConnectAppAction } from "@ledgerhq/live-common/hw/actions/app";
+import { createAction as createConnectManagerAction } from "@ledgerhq/live-common/hw/actions/manager";
 import { useUpdateFirmware } from "@ledgerhq/live-common/deviceSDK/hooks/useUpdateFirmware";
 import { Device, DeviceModelId } from "@ledgerhq/types-devices";
 import {
@@ -25,6 +29,7 @@ export type FirmwareUpdateParams = {
 
 export type UpdateStep =
   | "start"
+  | "appsBackup"
   | "imageBackup"
   | "firmwareUpdate"
   | "languageRestore"
@@ -35,6 +40,8 @@ export type UpdateStep =
 const installLanguageAction = createInstallLanguageAction(installLanguage);
 const staxLoadImageAction = createStaxLoadImageAction(staxLoadImage);
 const staxFetchImageAction = createStaxFetchImageAction(staxFetchImage);
+const connectManagerAction = createConnectManagerAction(connectManager);
+const connectAppAction = createConnectAppAction(connectApp);
 
 export const useUpdateFirmwareAndRestoreSettings = ({
   updateFirmwareAction,
@@ -42,6 +49,11 @@ export const useUpdateFirmwareAndRestoreSettings = ({
   deviceInfo,
 }: FirmwareUpdateParams) => {
   const [updateStep, setUpdateStep] = useState<UpdateStep>("start");
+
+  const connectManagerState = connectManagerAction.useHook(
+    updateStep === "appsBackup" ? device : null, null
+  );
+  const [installedApps, setInstalledApps] = useState<string[]>([]);
 
   const staxFetchImageState = staxFetchImageAction.useHook(
     updateStep === "imageBackup" ? device : null,
@@ -68,6 +80,10 @@ export const useUpdateFirmwareAndRestoreSettings = ({
 
   const proceedToFirmwareUpdate = useCallback(() => {
     setUpdateStep("firmwareUpdate");
+  }, []);
+
+  const proceedToAppsBackup = useCallback(() => {
+    setUpdateStep("appsBackup");
   }, []);
 
   const proceedToImageBackup = useCallback(() => {
@@ -109,7 +125,13 @@ export const useUpdateFirmwareAndRestoreSettings = ({
   useEffect(() => {
     switch (updateStep) {
       case "start":
-        proceedToImageBackup();
+        proceedToAppsBackup();
+        break;
+      case "appsBackup":
+        if(connectManagerState.result) {
+          setInstalledApps(connectManagerState.result.appsListNames);
+          proceedToImageBackup();
+        }
         break;
       case "imageBackup":
         if (staxFetchImageState.imageFetched || staxFetchImageState.error) {
@@ -163,6 +185,7 @@ export const useUpdateFirmwareAndRestoreSettings = ({
   }, [
     device.modelId,
     deviceInfo.languageId,
+    connectManagerState.result,
     installLanguageState.error,
     installLanguageState.languageInstalled,
     proceedToAppsRestore,

@@ -164,6 +164,7 @@ export const FirmwareUpdate = ({
       {
         status: {
           start: ItemStatus.inactive,
+          appsBackup: ItemStatus.inactive,
           imageBackup: ItemStatus.inactive,
           firmwareUpdate: ItemStatus.inactive,
           languageRestore: ItemStatus.active,
@@ -177,6 +178,7 @@ export const FirmwareUpdate = ({
       {
         status: {
           start: ItemStatus.inactive,
+          appsBackup: ItemStatus.inactive,
           imageBackup: ItemStatus.inactive,
           firmwareUpdate: ItemStatus.inactive,
           languageRestore: ItemStatus.inactive,

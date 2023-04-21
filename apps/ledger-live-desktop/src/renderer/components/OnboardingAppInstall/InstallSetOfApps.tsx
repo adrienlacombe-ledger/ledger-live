@@ -57,7 +57,6 @@ const InstallSetOfApps = ({
     itemProgress,
     progress,
     opened,
-
     isLocked,
     allowManagerGranted,
     isLoading,
