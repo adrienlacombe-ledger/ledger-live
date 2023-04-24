@@ -20,6 +20,7 @@ import SwapSmallCoin2Image from "./banners/Swap/images/smallcoin2.png";
 import SwapSmallCoin3Image from "./banners/Swap/images/smallcoin3.png";
 import { portfolioContentCardSelector } from "~/renderer/reducers/dynamicContent";
 import { useSelector } from "react-redux";
+import { ContentCard } from "~/types/dynamicContent";
 
 export const getTransitions = (transition: "slide" | "flip", reverse = false) => {
   const mult = reverse ? -1 : 1;
@@ -58,7 +59,7 @@ export const getTransitions = (transition: "slide" | "flip", reverse = false) =>
   }[transition];
 };
 
-const referralProgramSlide = {
+const referralProgramSlide: ContentCard = {
   id: "referralProgram",
   title: <Trans i18nKey={`banners.referralProgram.title`} />,
   description: <Trans i18nKey={`banners.referralProgram.description`} />,
@@ -82,7 +83,7 @@ const referralProgramSlide = {
   ],
 };
 
-const exchangeSlide = {
+const exchangeSlide: ContentCard = {
   path: "/exchange",
   id: "buyCrypto",
   title: <Trans i18nKey={`banners.buyCrypto.title`} />,
@@ -130,7 +131,7 @@ const exchangeSlide = {
     },
   ],
 };
-const swapSlide = {
+const swapSlide: ContentCard = {
   path: "/swap",
   id: "swap",
   title: <Trans i18nKey={`banners.swap.title`} />,
@@ -195,11 +196,16 @@ const swapSlide = {
   ],
 };
 
-export const useDefaultSlides = () => {
+type SlideRes = {
+  id: string;
+  Component: React.ComponentType<{}>;
+};
+
+export const useDefaultSlides = (): SlideRes[] => {
   const referralProgramConfig = useFeature("referralProgramDesktopBanner");
   const portfolioCards = useSelector(portfolioContentCardSelector);
 
-  const slides = useMemo(() => {
+  const slides: ContentCard[] = useMemo(() => {
     if (referralProgramConfig?.enabled && referralProgramConfig?.params?.path) {
       return [
         { ...referralProgramSlide, path: referralProgramConfig?.params?.path },
@@ -212,11 +218,14 @@ export const useDefaultSlides = () => {
 
   return useMemo(
     () =>
-      map(getEnv("PLAYWRIGHT_RUN") ? [swapSlide, exchangeSlide] : slides, (slide: Props) => ({
-        id: slide.name,
-        // eslint-disable-next-line react/display-name
-        Component: () => <Slide {...slide} />,
-      })),
+      map<ContentCard, SlideRes>(
+        getEnv("PLAYWRIGHT_RUN") ? [swapSlide, exchangeSlide] : slides,
+        (slide): SlideRes => ({
+          id: slide.id,
+          // eslint-disable-next-line react/display-name
+          Component: () => <Slide {...slide} />,
+        }),
+      ),
     [slides],
   );
 };
