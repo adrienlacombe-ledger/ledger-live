@@ -7,7 +7,7 @@ const Divider = styled.div`
   height: 1px;
 
   &[data-variant="light"] {
-    background: ${(p) => p.theme.colors.neutral.c40};
+    background: ${(p) => p.theme.colors.neutral.c30};
   }
 `;
 
