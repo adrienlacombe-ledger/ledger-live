@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { TouchableOpacity } from "react-native";
 import { useTheme } from "styled-components/native";
 import * as Animatable from "react-native-animatable";
@@ -30,7 +30,7 @@ import { Props } from "../../Catalog";
 const AnimatedView = Animatable.View;
 
 const options: Fuse.IFuseOptions<LiveAppManifest> = {
-  keys: ["name"],
+  keys: ["name", "categories"],
   threshold: 0.1,
 };
 
@@ -39,16 +39,22 @@ export function Catalog({ navigation }: Props) {
   const { t } = useTranslation();
   const title = t("browseWeb3.catalog.title");
 
-  const manifestsWithSearchableVisibilityOnly = useManifests({
-    visibility: "searchable",
-  });
+  const manifestsWithSearchableVisibilityOnly: LiveAppManifest[] = useManifests(
+    {
+      visibility: "searchable",
+    },
+  );
 
-  const manifestsWithCompleteVisibilityOnly = useManifests({
+  const manifestsWithCompleteVisibilityOnly: LiveAppManifest[] = useManifests({
     visibility: "complete",
   });
 
-  const manifests = manifestsWithSearchableVisibilityOnly.concat(
-    manifestsWithCompleteVisibilityOnly,
+  const manifests = useMemo(
+    () => [
+      ...manifestsWithSearchableVisibilityOnly,
+      ...manifestsWithCompleteVisibilityOnly,
+    ],
+    [],
   );
 
   const {
