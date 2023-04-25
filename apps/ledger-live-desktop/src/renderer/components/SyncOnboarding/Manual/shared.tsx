@@ -1,7 +1,8 @@
 import React from "react";
-import { Flex, Text, InfiniteLoader, FlexBoxProps, Icons } from "@ledgerhq/react-ui";
-import styled, { useTheme } from "styled-components";
+import { Flex, Text, InfiniteLoader, Icons } from "@ledgerhq/react-ui";
+import styled, { useTheme, StyledComponent, DefaultTheme } from "styled-components";
 import InfoCircle from "~/renderer/icons/InfoCircle";
+import { FlexBoxProps } from "@ledgerhq/react-ui/components/layout/Flex";
 
 export const StepText = styled(Text).attrs({
   color: "neutral.c90",
@@ -9,12 +10,16 @@ export const StepText = styled(Text).attrs({
   fontWeight: "medium",
 })``;
 
-export const BorderFlex = styled(Flex)`
+export const BorderFlex: StyledComponent<"div", DefaultTheme, FlexBoxProps> = styled(Flex)`
   background-color: ${p => p.theme.colors.palette.neutral.c30};
   border-radius: 35px;
 `;
 
-export const IconContainer = styled(BorderFlex).attrs({
+export const IconContainer: StyledComponent<
+  "div",
+  DefaultTheme,
+  React.ComponentProps<typeof BorderFlex>
+> = styled(BorderFlex).attrs({
   width: 40,
   height: 40,
   flexDirection: "row",
@@ -24,13 +29,13 @@ export const IconContainer = styled(BorderFlex).attrs({
   color: ${p => p.theme.colors.palette.neutral.c100};
 `;
 
-export const Row = styled(Flex).attrs({
+export const Row: StyledComponent<"div", DefaultTheme, FlexBoxProps> = styled(Flex).attrs({
   flexDirection: "row",
   justifyContent: "flex-start",
   alignItems: "center",
 })``;
 
-export const Column = styled(Flex).attrs({
+export const Column: StyledComponent<"div", DefaultTheme, FlexBoxProps> = styled(Flex).attrs({
   flexDirection: "column",
   justifyContent: "flex-start",
   alignItems: "stretch",

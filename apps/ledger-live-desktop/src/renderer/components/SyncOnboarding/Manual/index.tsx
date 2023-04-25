@@ -214,7 +214,7 @@ const SyncOnboardingManual = ({ deviceModelId: strDeviceModelId }: SyncOnboardin
     lockedDevice: lockedDeviceDuringPolling,
   } = useOnboardingStatePolling({
     getOnboardingStatePolling,
-    device,
+    device: device || null,
     pollingPeriodMs,
     stopPolling,
   });
@@ -389,11 +389,13 @@ const SyncOnboardingManual = ({ deviceModelId: strDeviceModelId }: SyncOnboardin
             {displayUnlockOrPlugDeviceAnimation ? (
               <Animation
                 height="540px"
-                animation={getDeviceAnimation(
-                  lastKnownDeviceModelId,
-                  theme.theme,
-                  lockedDeviceDuringPolling ? "enterPinCode" : "plugAndPinCode",
-                )}
+                animation={
+                  getDeviceAnimation(
+                    lastKnownDeviceModelId,
+                    theme.theme,
+                    lockedDeviceDuringPolling ? "enterPinCode" : "plugAndPinCode",
+                  ) as object
+                }
               />
             ) : (
               <DeviceIllustration deviceId={lastKnownDeviceModelId} />
